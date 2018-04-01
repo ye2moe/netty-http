@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="netty-http:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/netty_http_jar</output-path>
+    <root id="archive" name="netty-http.jar">
+      <element id="module-output" name="netty-http" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/io/netty/netty-all/4.1.15.Final/netty-all-4.1.15.Final.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
