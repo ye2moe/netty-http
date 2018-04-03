@@ -1,4 +1,4 @@
-package cn.moe.https;
+package cn.moe.wxcourse;
 
 public class CurrentCourse {
     String id;

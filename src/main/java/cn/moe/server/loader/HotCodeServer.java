@@ -16,7 +16,7 @@ import java.util.List;
 
 public class HotCodeServer implements Runnable {
 
-    volatile boolean isHotCode = false;
+    volatile boolean isHotCode = true;
     public static final String PACKAGE_DOT = ".";
     String baseDirPath = System.getProperty("user.dir") + File.separatorChar + "hotcode" + File.separatorChar;
     String serviceClazzPackage = "cn.moe.service.impl";
@@ -60,39 +60,50 @@ public class HotCodeServer implements Runnable {
 
     private void filterAndNewInstance() {
         for (String clzName : classNames) {
-            Class clz = null;
-            try {
-                clz = Class.forName(clzName);
-                if (clz.isAnnotationPresent(Controller.class)) {
-                    Object instance = clz.getConstructor().newInstance();
-                    String cm = "";//路径
-                    if (clz.isAnnotationPresent(RequestMapping.class)) {
-                        cm = ((RequestMapping) clz.getAnnotation(RequestMapping.class)).value();
-                    }
-                    Method methods[] = clz.getDeclaredMethods();
-                    for (Method m : methods) {
-                        if (m.isAnnotationPresent(RequestMapping.class)) {
-                            String rm = ((RequestMapping) m.getAnnotation(RequestMapping.class)).value();
-                            handleMap.put(addUri(cm, rm), new Object[]{instance,m});
-                        }
-                    }
+            handleMapping(clzName);
+        }
+    }
+
+    /**
+     * 全限定类名
+     * @param clzName
+     */
+    private void handleMapping(String clzName) {
+        try {
+            Object instance = Class.forName(clzName).getConstructor().newInstance();
+            doAnnotationMapping(instance);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void doAnnotationMapping(Object instance) {
+        Class clz = instance.getClass();
+        if (clz.isAnnotationPresent(Controller.class)) {
+            String cm = "";//class路径
+            if (clz.isAnnotationPresent(RequestMapping.class)) {
+                cm = ((RequestMapping) clz.getAnnotation(RequestMapping.class)).value();
+            }
+            Method methods[] = clz.getDeclaredMethods();
+            for (Method m : methods) {
+                if (m.isAnnotationPresent(RequestMapping.class)) {
+                    String rm = m.getAnnotation(RequestMapping.class).value();
+                    handleMap.put(addUri(cm, rm), new Object[]{instance,m});
                 }
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
             }
         }
     }
 
     private String addUri(String cm, String rm) {
-        if (!cm.startsWith("/"))
+        if (!"".equals(cm) && !cm.startsWith("/"))
             cm = "/" + cm;
         if (!rm.startsWith("/"))
             rm = "/" + rm;
@@ -100,7 +111,8 @@ public class HotCodeServer implements Runnable {
     }
 
     private void hotCodeInit() {
-        fpackage = new File(baseDirPath + File.separatorChar + serviceClazzPackage.replaceAll("\\.", File.separator));
+
+        fpackage = new File(baseDirPath + File.separatorChar + replaceDot2Separator(serviceClazzPackage));
 
         if (!fpackage.isDirectory()) {
 
@@ -116,6 +128,10 @@ public class HotCodeServer implements Runnable {
         }
     }
 
+    private String replaceDot2Separator(String path){
+        return path.replace(".","/");
+    }
+
     /**
      * 递归扫描包路径
      * 取出所有满足条件的 全名类
@@ -124,11 +140,11 @@ public class HotCodeServer implements Runnable {
      */
     private void scanPackage(String pack) {
 
-        System.out.println(
-                File.separatorChar + pack.replaceAll("\\.", File.separator));
-        URL url = this.getClass().getResource(File.separatorChar + pack.replaceAll("\\.", File.separator));
+        //System.out.println(File.separatorChar + replaceDot2Separator(pack));
 
-        System.out.println(url.getPath());
+        URL url = ClassLoader.getSystemResource(replaceDot2Separator(pack));
+
+        System.out.println(url);
         File fs = new File(url.getFile());
 
         for (File f : fs.listFiles()) {
@@ -165,19 +181,26 @@ public class HotCodeServer implements Runnable {
                     LoadInfo li = loadInfoMap.get(clzName);
                     //是否修改过
                     if (li.getLoadTime() != clzFile.lastModified()) {
-                        System.out.println("reload ==== " + clzName);
-                        load(clzName, clzFile.lastModified(), li);
-                        loadInfoMap.put(clzName, li);
+                        addHotCode(clzName,clzFile.lastModified(),li);
                     }
                 } else {
                     //新的class
-                    LoadInfo li = load(clzName, clzFile.lastModified(), null);
-                    loadInfoMap.put(clzName, li);
+                    addHotCode(clzName,clzFile.lastModified(),null);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+    }
+    public void addHotCode(String clzName,long time,LoadInfo li) throws Exception {
+        if(li == null){
+            System.out.println("load -> " + clzName);
+        }else{
+            System.out.println("reload -> " + clzName);
+        }
+        LoadInfo n = load(clzName,time, li);
+        loadInfoMap.put(clzName, n);
+        doAnnotationMapping(n.getService());
     }
 
     private LoadInfo load(String name, long l, LoadInfo li) throws Exception {

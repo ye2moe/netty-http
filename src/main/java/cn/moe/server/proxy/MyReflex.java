@@ -2,12 +2,13 @@ package cn.moe.server.proxy;
 
 import cn.moe.annotation.RequestParam;
 import cn.moe.annotation.ResponseBody;
-import cn.moe.https.Parse;
+import cn.moe.wxcourse.Parse;
 import cn.moe.server.loader.ClassNotFindError;
 import cn.moe.server.loader.HotCodeServer;
 import cn.moe.service.Service;
 import cn.moe.service.impl.QueryServiceImpl;
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 
@@ -43,6 +44,7 @@ public class MyReflex {
         //m.invoke(objs[1])
     }
 
+    @Deprecated
     public static Service getServiceByReflex(String serviceName) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException, ClassNotFindError {
 
         serviceName = toUpperFristChar(serviceName);
@@ -53,6 +55,7 @@ public class MyReflex {
         //return (Service) serviceClazz.getDeclaredConstructor().newInstance();
     }
 
+    @Deprecated
     public static void invokeService(Service service, FullHttpResponse httpResponse, HttpRequest httpRequest) throws NoSuchParameter {
         try {
 
@@ -73,7 +76,17 @@ public class MyReflex {
     }
 
     private static void invoke(Object service, Method execute, FullHttpResponse httpResponse, HttpRequest httpRequest) throws NoSuchParameter, IllegalAccessException, InvocationTargetException {
+        /*
+        String method = httpRequest.method().name();
+        if (methodCheck(service.getClass(), method)) return;
 
+        if(service.getClass().isAnnotationPresent(PostMapping.class)){
+            if(method != "GET"){
+                System.out.println(service.getClass().getSimpleName()+"："+ method +" method not support!");
+                return;
+            }
+        }
+        */
         Annotation ass[][] = execute.getParameterAnnotations();
         Class parameterTypes[] = execute.getParameterTypes();
         Object[] params = new Object[parameterTypes.length];
@@ -103,13 +116,19 @@ public class MyReflex {
 
         Object obj = execute.invoke(service, params);
 
+        boolean isJsonBack = false;
 
         for (Annotation methodAnno : execute.getAnnotations()) {
             if (methodAnno.annotationType().equals(ResponseBody.class)) {
                 httpResponse.content().writeBytes(obj.toString().getBytes());
+                isJsonBack = true;
             }
         }
+        if(!isJsonBack){
+            httpResponse.headers().set(HttpHeaderNames.LOCATION, obj);
+        }
     }
+
 
     public static void main(String argvs[]) throws NoSuchParameter {
         MyReflex.invokeService(new QueryServiceImpl(), null, null);

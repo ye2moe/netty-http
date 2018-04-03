@@ -10,6 +10,5 @@ public @interface RequestParam {
 
     String value();
     boolean require() default true;
-
-
+    String defaultValue() default "";
 }

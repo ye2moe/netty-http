@@ -1,12 +1,6 @@
 package cn.moe.server;
 
-import cn.moe.https.CurrentCourse;
-import cn.moe.https.Https;
-import cn.moe.https.Parse;
-import cn.moe.https.User;
-import cn.moe.server.loader.ClassNotFindError;
 import cn.moe.server.proxy.MyReflex;
-import cn.moe.server.proxy.NoSuchParameter;
 import cn.moe.service.Service;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -15,11 +9,10 @@ import io.netty.handler.codec.http.*;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 
 public class HttpServerHandler extends ChannelInboundHandlerAdapter {
-    private String content = "hello world";
+    
     private final static String LOC = "302";
     private final static String NOT_FOND = "404";
     private final static String BAD_REQUEST = "400";
@@ -34,7 +27,6 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
         mapStatus.put(INTERNAL_SERVER_ERROR, HttpResponseStatus.INTERNAL_SERVER_ERROR);
     }
 
-
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof HttpRequest) {
@@ -43,12 +35,12 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
             //System.out.println("method " + request.method());
             System.out.println("uri " + request.uri());
             String uri = request.uri().replace("/", "").trim();
-            FullHttpResponse httpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+            FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
             if (mapStatus.get(uri) != null) {
-                httpResponse.setStatus(mapStatus.get(uri));
-                httpResponse.content().writeBytes(mapStatus.get(uri).toString().getBytes());
+                response.setStatus(mapStatus.get(uri));
+                response.content().writeBytes(mapStatus.get(uri).toString().getBytes());
             } else {
-                MyReflex.invokeService(request,httpResponse);
+                MyReflex.invokeService(request,response);
                 /*
                 if(request.uri().length()<=1)return;
                 String path = request.uri().substring(1,request.uri().length());
@@ -93,16 +85,16 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
                 }*/
             }
             //重定向处理
-            if (httpResponse.status().equals(HttpResponseStatus.FOUND)) {
-                httpResponse.headers().set(HttpHeaderNames.LOCATION, "https://www.baidu.com/");
+            if (response.status().equals(HttpResponseStatus.FOUND)) {
+                response.headers().set(HttpHeaderNames.LOCATION, "https://www.baidu.com/");
             }
-            httpResponse.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html;charset=UTF-8");
-            httpResponse.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, httpResponse.content().readableBytes());
+            response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html;charset=UTF-8");
+            response.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
             if (keepaLive) {
-                httpResponse.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
-                ctx.writeAndFlush(httpResponse);
+                response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+                ctx.writeAndFlush(response);
             } else {
-                ctx.writeAndFlush(httpResponse).addListener(ChannelFutureListener.CLOSE);
+                ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
             }
         }
     }

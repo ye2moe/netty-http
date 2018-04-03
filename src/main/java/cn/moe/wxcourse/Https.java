@@ -1,4 +1,4 @@
-package cn.moe.https;
+package cn.moe.wxcourse;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;

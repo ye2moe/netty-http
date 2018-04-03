@@ -1,4 +1,4 @@
-package cn.moe.https;
+package cn.moe.wxcourse;
 
 import javax.net.ssl.X509TrustManager;
 import java.security.cert.CertificateException;

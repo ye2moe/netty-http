@@ -2,10 +2,11 @@ package cn.moe.service.impl;
 
 import cn.moe.annotation.RequestParam;
 import cn.moe.annotation.ResponseBody;
-import cn.moe.https.CurrentCourse;
-import cn.moe.https.Https;
-import cn.moe.https.User;
+import cn.moe.wxcourse.CurrentCourse;
+import cn.moe.wxcourse.Https;
+import cn.moe.wxcourse.User;
 import cn.moe.service.Service;
+
 
 public class SigninServiceImpl implements Service {
 

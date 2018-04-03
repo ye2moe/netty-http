@@ -1,6 +1,4 @@
-package cn.moe.https;
-
-import java.util.List;
+package cn.moe.wxcourse;
 
 public class User {
     private int userType;
