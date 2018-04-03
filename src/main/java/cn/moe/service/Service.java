@@ -5,7 +5,7 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
 
 public interface Service {
-    void execute(FullHttpResponse httpResponse , HttpRequest request);
+    //void execute(FullHttpResponse httpResponse , HttpRequest request);
 
     void clean();
 }

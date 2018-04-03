@@ -6,6 +6,7 @@ import cn.moe.https.Parse;
 import cn.moe.https.User;
 import cn.moe.server.loader.ClassNotFindError;
 import cn.moe.server.proxy.MyReflex;
+import cn.moe.server.proxy.NoSuchParameter;
 import cn.moe.service.Service;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -47,6 +48,9 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
                 httpResponse.setStatus(mapStatus.get(uri));
                 httpResponse.content().writeBytes(mapStatus.get(uri).toString().getBytes());
             } else {
+                MyReflex.invokeService(request,httpResponse);
+                /*
+                if(request.uri().length()<=1)return;
                 String path = request.uri().substring(1,request.uri().length());
                 path.split("[?]");
                 if(path.contains("?"))
@@ -55,10 +59,15 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
                 Service service = null;
                 try {
                     service = MyReflex.getServiceByReflex(path);
-                    service.execute(httpResponse, request);
+                    MyReflex.invokeService(service,httpResponse,request);
+                    //service.execute(httpResponse, request);
                 } catch (ClassNotFindError classNotFindError) {
-                    classNotFindError.printStackTrace();
+                    System.out.println(classNotFindError.getMessage());
+                } catch (NoSuchParameter noSuchParameter) {
+                    System.out.println(noSuchParameter.getMessage());
                 }
+                */
+
                 /*
                 if (mapService.containsKey(path)) {
                     service = mapService.get(path);

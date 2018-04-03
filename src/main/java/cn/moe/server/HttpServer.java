@@ -1,6 +1,6 @@
 package cn.moe.server;
 
-import cn.moe.server.loader.LoaderServer;
+import cn.moe.server.loader.HotCodeServer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -15,15 +15,15 @@ public class HttpServer {
 
     public static void start(final int port) throws Exception {
 
-        LoaderServer loaderServer = LoaderServer.getInstance();
-        new Thread(loaderServer).start();
+        HotCodeServer hotCodeServer = HotCodeServer.getInstance();
+        new Thread(hotCodeServer).start();
         /*
         int i = 0;
         while (true) {
             i++;
             String name = "times:" + i;
             System.out.println(name);
-            loaderServer.test();
+            hotCodeServer.test();
             try {
                 Thread.sleep(1000 * 5);
             } catch (InterruptedException e) {
@@ -61,6 +61,9 @@ public class HttpServer {
     }
 
     public static void main(String[] args) throws Exception {
-        start(8080);
+        int port = 8080;
+        if(args.length >= 1)
+            port = Integer.parseInt(args[0]);
+        start(port);
     }
 }

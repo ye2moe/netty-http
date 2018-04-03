@@ -16,13 +16,15 @@ import java.util.List;
 
 public class HotCodeServer implements Runnable {
 
+    volatile boolean isHotCode = false;
     public static final String PACKAGE_DOT = ".";
     String baseDirPath = System.getProperty("user.dir") + File.separatorChar + "hotcode" + File.separatorChar;
     String serviceClazzPackage = "cn.moe.service.impl";
     File fpackage;
     HashMap<String, LoadInfo> loadInfoMap = new HashMap<String, LoadInfo>();
-    HashMap<String, Object> instanceMap = new HashMap<String, Object>();
-    HashMap<String, Method> handleMap = new HashMap<String, Method>();
+
+    //Object[0] instance Object[1] method
+    HashMap<String, Object[]> handleMap = new HashMap<String,  Object[]>();
     List<String> classNames = new ArrayList<String>();
 
 
@@ -34,8 +36,14 @@ public class HotCodeServer implements Runnable {
 
     MyClassLoader myClassLoader;
     //单例模式
-    public final static HotCodeServer instance = new HotCodeServer();
+    private static HotCodeServer instance;
 
+    public static HotCodeServer getInstance(){
+        if(instance == null) {
+            instance = new HotCodeServer();
+        }
+        return instance;
+    }
     private HotCodeServer() {
         init();
     }
@@ -45,7 +53,8 @@ public class HotCodeServer implements Runnable {
         filterAndNewInstance();
 
         //热加载 初始化
-        hotCodeInit();
+        if(isHotCode)
+            hotCodeInit();
 
     }
 
@@ -55,7 +64,7 @@ public class HotCodeServer implements Runnable {
             try {
                 clz = Class.forName(clzName);
                 if (clz.isAnnotationPresent(Controller.class)) {
-                    instanceMap.put(clzName, clz.getConstructor().newInstance());
+                    Object instance = clz.getConstructor().newInstance();
                     String cm = "";//路径
                     if (clz.isAnnotationPresent(RequestMapping.class)) {
                         cm = ((RequestMapping) clz.getAnnotation(RequestMapping.class)).value();
@@ -64,8 +73,7 @@ public class HotCodeServer implements Runnable {
                     for (Method m : methods) {
                         if (m.isAnnotationPresent(RequestMapping.class)) {
                             String rm = ((RequestMapping) m.getAnnotation(RequestMapping.class)).value();
-
-                            handleMap.put(addUri(cm, rm), m);
+                            handleMap.put(addUri(cm, rm), new Object[]{instance,m});
                         }
                     }
                 }
@@ -115,8 +123,12 @@ public class HotCodeServer implements Runnable {
      * @param pack
      */
     private void scanPackage(String pack) {
-        URL url = this.getClass().getResource(File.separatorChar + pack.replaceAll("//.", File.separator));
 
+        System.out.println(
+                File.separatorChar + pack.replaceAll("\\.", File.separator));
+        URL url = this.getClass().getResource(File.separatorChar + pack.replaceAll("\\.", File.separator));
+
+        System.out.println(url.getPath());
         File fs = new File(url.getFile());
 
         for (File f : fs.listFiles()) {
@@ -132,7 +144,8 @@ public class HotCodeServer implements Runnable {
 
     public void run() {
         while (true) {
-            scanClass(fpackage);
+            if(isHotCode)
+                scanClass(fpackage);
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -199,7 +212,7 @@ public class HotCodeServer implements Runnable {
         }
     }
 
-    public Method getHandle(String uri) {
+    public Object[] getHandle(String uri) {
         return handleMap.get(uri);
     }
 }

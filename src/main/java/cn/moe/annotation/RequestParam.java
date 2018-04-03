@@ -2,11 +2,14 @@ package cn.moe.annotation;
 
 import java.lang.annotation.*;
 
-@Target({ElementType.METHOD,ElementType.PARAMETER})
+@Target({ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
 public @interface RequestParam {
 
-    String name();
+    String value();
+    boolean require() default true;
+
+
 }

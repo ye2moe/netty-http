@@ -377,7 +377,7 @@ java.lang.StringIndexOutOfBoundsException: begin 1, end -1, length 6
 	at java.base/java.lang.Thread.run(Thread.java:844)
 2018-03-31 22:47:23  [ nioEventLoopGroup-3-2:40666 ] - [ WARN ]  An exceptionCaught() event was fired, and it reached at the tail of the pipeline. It usually means the last handler in the pipeline did not handle the exception.
 java.lang.NullPointerException
-	at cn.moe.server.loader.LoaderServer.getService(LoaderServer.java:20)
+	at cn.moe.server.loader.HotCodeServer.getService(LoaderServer.java:20)
 	at cn.moe.server.proxy.MyReflex.getServiceByReflex(MyReflex.java:16)
 	at cn.moe.server.HttpServerHandler.channelRead(HttpServerHandler.java:52)
 	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:362)

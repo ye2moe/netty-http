@@ -1,5 +1,7 @@
 package cn.moe.service.impl;
 
+import cn.moe.annotation.RequestParam;
+import cn.moe.annotation.ResponseBody;
 import cn.moe.https.Https;
 import cn.moe.https.Parse;
 import cn.moe.https.User;
@@ -15,12 +17,10 @@ public class QueryServiceImpl implements Service {
     public QueryServiceImpl() {
     }
 
-    public void execute(FullHttpResponse httpResponse , HttpRequest request) {
-        String username = Parse.getRequestParam(request.uri(),"username");
+    @ResponseBody
+    public String execute(@RequestParam(value = "username",require = true) String username) {
 
-        if("".equals(username))
-            return;
-        httpResponse.content().writeBytes(Https.get(Https.currentAndDayCourses(new User(username,1))).getBytes());
+        return Https.get(Https.currentAndDayCourses(new User(username,1)));
 
     }
 
